@@ -1,13 +1,20 @@
 import { Toaster } from "react-hot-toast";
 import PropTypes from "prop-types";
 import { v4 as uuidv4 } from "uuid";
+import { useState } from "react";
+import { Spinner } from "flowbite-react";
 
 const ProductImagesSection = ({
   images,
   addNewProductImage,
   removeImageButton,
+  isImageLoading,
 }) => {
+  const [hoverIndex, setHoverIndex] = useState(null);
 
+  const isRemoveButtonShown = (ImageIndex) => {
+    setHoverIndex(ImageIndex);
+  };
 
   return (
     <div className={"my-3"}>
@@ -25,12 +32,17 @@ const ProductImagesSection = ({
         }`}
       >
         {images?.map((image, index) => (
-          <div className={"productImages relative"} key={uuidv4()}>
+          <div
+            className={"productImages relative btn"}
+            key={uuidv4()}
+            onMouseEnter={() => isRemoveButtonShown(index)}
+            onMouseLeave={() => isRemoveButtonShown(null)}
+          >
             <div className={"w-full h-full"}>
               <div
-                className={
-                  "absolute w-4 h-4 rounded-full bg-white top-1 right-1 cursor-pointer"
-                }
+                className={`absolute w-4 h-4 rounded-full bg-white top-1 right-1 cursor-pointer ${
+                  hoverIndex == index ? "block" : "hidden"
+                } `}
                 onClick={(event) => removeImageButton(event, index)}
               >
                 <svg
@@ -56,6 +68,13 @@ const ProductImagesSection = ({
             </div>
           </div>
         ))}
+        {isImageLoading && (
+          <div className={"productImages"}>
+            <div className="text-left w-full h-full flex items-center justify-center">
+              <Spinner aria-label="Left-aligned spinner example" color="gray" />
+            </div>
+          </div>
+        )}
         {images?.length < 20 ? (
           <div
             className={"productImages cursor-pointer"}
@@ -93,4 +112,5 @@ ProductImagesSection.propTypes = {
   images: PropTypes.array,
   addNewProductImage: PropTypes.func.isRequired,
   removeImageButton: PropTypes.func.isRequired,
+  isImageLoading: PropTypes.bool,
 };

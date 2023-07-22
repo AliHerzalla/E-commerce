@@ -21,6 +21,7 @@ const ProductForm = ({
   const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productImages, setProductImages] = useState([]);
+  const [isImageLoading, setIsImageLoading] = useState(false);
 
   const navigate = useNavigate();
   const { id: productId } = useParams();
@@ -166,6 +167,7 @@ const ProductForm = ({
     fileInput.max = 20;
     fileInput.accept = ".jpg, .jpeg, .png, .webp";
     fileInput.addEventListener("change", async () => {
+      setIsImageLoading(true);
       const files = fileInput.files;
       if (files.length > 20) {
         toast.error("The maximum number of images is 20", {
@@ -185,6 +187,7 @@ const ProductForm = ({
           filesData.append("image", file);
         }
         try {
+          setIsImageLoading(true);
           const response = await fetch(
             `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
               import.meta.env.VITE_BACKEND_ADMIN_PORT
@@ -201,6 +204,7 @@ const ProductForm = ({
                 message: result.message,
               });
               setTimeout(() => {
+                setIsImageLoading(false);
                 setProductImages([...productImages, result.image]);
               }, 2000);
             } else {
@@ -264,6 +268,7 @@ const ProductForm = ({
         images={productImages ? productImages : []}
         addNewProductImage={addNewProductImage}
         removeImageButton={removeImageButton}
+        isImageLoading={isImageLoading}
       />
 
       <label>Product Description</label>
