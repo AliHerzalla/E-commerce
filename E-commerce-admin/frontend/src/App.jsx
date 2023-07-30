@@ -11,6 +11,7 @@ import Error from "./pages/Error";
 import NewProduct from "./pages/NewProduct";
 import EditProduct from "./pages/EditProduct";
 import DeleteProduct from "./pages/DeleteProduct";
+import Categories from "./pages/Categories";
 
 function App() {
   return (
@@ -19,8 +20,9 @@ function App() {
         <Route path={"/login"} element={<Login />} />
         <Route path={"/"} exact Component={Layout}>
           <Route path={"/dashboard"} element={<Dashboard />} />
-          <Route path={"/orders"} element={<Orders />} />
           <Route path={"/products"} element={<Products />} />
+          <Route path={"/categories"} element={<Categories />} />
+          <Route path={"/orders"} element={<Orders />} />
           <Route path={"/sittings"} element={<Sittings />} />
           <Route path={"/products/new-product/:id"} element={<NewProduct />} />
           <Route path={"/products/edit/:id"} element={<EditProduct />} />

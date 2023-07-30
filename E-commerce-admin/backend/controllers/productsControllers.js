@@ -16,7 +16,6 @@ const deleteProductImagesQuery = "DELETE FROM products_images WHERE product_id =
 const handelCreateNewProduct = (req, res) => {
     const { id } = req.params;
     const { productName, productDescription, productPrice, productImages } = req.body;
-    console.log(productImages);
     const values = [id, productName, productDescription, productPrice];
     connection.promise().execute(insertNewProductQuery, values, async (error, result) => {
         if (error) {

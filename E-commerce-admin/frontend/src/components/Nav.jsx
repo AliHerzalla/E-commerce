@@ -55,7 +55,8 @@ const Nav = () => {
     if (
       selectedPath != "/dashboard" &&
       selectedPath != "/sittings" &&
-      selectedPath != "/orders"
+      selectedPath != "/orders" &&
+      selectedPath != "/categories"
     ) {
       setSelected("/products");
     }
@@ -121,7 +122,7 @@ const Nav = () => {
     }
   };
 
-  const linksStyle = "flex items-center gap-2 p-2 md:w-full w-fit";
+  const linksStyle = `flex items-center gap-2 p-2 md:w-full w-fit hover:bg-gray hover:bg-[#d6d6d4] hover:rounded-md duration-150`;
   const selectedLink =
     "dark:text-black text-white bg-[#1f1f1f] rounded-md dark:bg-white";
 
@@ -160,7 +161,9 @@ const Nav = () => {
           <Link
             className={`${linksStyle} ${
               selected == "/dashboard" ? selectedLink : ""
-            }`}
+            }
+            ${selected == "/dashboard" ? "" : "hover:bg-opacity-30"}
+            `}
             to={"/dashboard"}
             onClick={() => {
               setSelected("/dashboard");
@@ -186,7 +189,9 @@ const Nav = () => {
           <Link
             className={`${linksStyle} ${
               selected == "/products" ? selectedLink : ""
-            }`}
+            }
+            ${selected == "/products" ? "" : "hover:bg-opacity-30"}
+            `}
             to={"/products"}
             onClick={() => {
               setSelected("/products");
@@ -211,8 +216,35 @@ const Nav = () => {
           </Link>
           <Link
             className={`${linksStyle} ${
+              selected == "/categories" ? selectedLink : ""
+            }${selected == "/categories" ? "" : "hover:bg-opacity-30"}`}
+            to={"/categories"}
+            onClick={() => {
+              setSelected("/categories");
+              localStorage.setItem("path", "/categories");
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-6 h-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+              />
+            </svg>
+
+            <p className={"md:flex hidden"}>Categories</p>
+          </Link>
+          <Link
+            className={`${linksStyle} ${
               selected == "/orders" ? selectedLink : ""
-            }`}
+            }${selected == "/orders" ? "" : "hover:bg-opacity-30"}`}
             to={"/orders"}
             onClick={() => {
               setSelected("/orders");
@@ -238,7 +270,7 @@ const Nav = () => {
           <Link
             className={`${linksStyle} ${
               selected == "/sittings" ? selectedLink : ""
-            }`}
+            }${selected == "/sittings" ? "" : "hover:bg-opacity-50"}`}
             to={"/sittings"}
             onClick={() => {
               setSelected("/sittings");

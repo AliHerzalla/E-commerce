@@ -19,7 +19,7 @@
 }
 
 .btn-primary {
-  @apply dark:bg-white bg-[#1f1f1f] text-white dark:text-[#1f1f1f] px-6 py-2 rounded-lg outline-none font-semibold my-2;
+  @apply dark:bg-white bg-[#1f1f1f] text-white dark:text-[#1f1f1f] px-6 py-2 rounded-lg outline-none font-semibold my-2 disabled:cursor-not-allowed disabled:bg-[#b3b3b355] disabled:text-[#1f1f1f] disabled:dark:text-white;
 }
 
 .centerClass {
@@ -38,4 +38,21 @@
 
 .selfProductImage {
   @apply w-full h-full flex justify-center items-center overflow-hidden text-[10px] md:text-sm text-center flex-col object-cover rounded-lg;
+}
+
+.basic {
+  @apply w-full shadow-lg rounded-md;
+}
+
+.basic thead tr th,
+.basic thead tr td {
+  @apply uppercase border md:text-lg dark:border-gray-200 border-black px-4 py-2;
+}
+
+.basic tbody tr td {
+  @apply px-4 py-1 dark:border-gray-50 border-black border;
+}
+
+.basic a {
+  @apply px-4 rounded-sm inline-flex mx-1 items-center gap-1 text-sm py-1;
 }
