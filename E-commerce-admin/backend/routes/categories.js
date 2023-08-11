@@ -6,7 +6,7 @@ const {
     handelDeleteCategory
 } = require("../controllers/categoriesControllers.js");
 
-router.post("/new-category", handelCreateNewCategory);
+router.post("/new-category/:id", handelCreateNewCategory);
 
 router.put("/edit-category/:id", handelEditCategory);
 

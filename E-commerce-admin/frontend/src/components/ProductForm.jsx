@@ -14,14 +14,17 @@ const ProductForm = ({
   existingPrice,
   id,
   existingImages,
+  existingCategory,
 }) => {
   const { setIsProductsUpdated } = useContext(Context);
 
   const [productName, setProductName] = useState("");
+  const [productCategory, setProductCategory] = useState("0");
   const [productDescription, setProductDescription] = useState("");
   const [productPrice, setProductPrice] = useState("");
   const [productImages, setProductImages] = useState([]);
   const [isImageLoading, setIsImageLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const navigate = useNavigate();
   const { id: productId } = useParams();
@@ -29,13 +32,43 @@ const ProductForm = ({
   useEffect(() => {
     if (id) {
       setProductName(existingName);
+      setProductCategory(existingCategory);
       setProductDescription(existingDescription);
       setProductPrice(existingPrice);
       setProductImages(() => {
         return existingImages;
       });
     }
-  }, [existingName, existingDescription, existingPrice, existingImages, id]);
+  }, [
+    existingName,
+    existingDescription,
+    existingPrice,
+    existingImages,
+    id,
+    existingCategory,
+  ]);
+
+  useEffect(() => {
+    fetch(
+      `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+        import.meta.env.VITE_BACKEND_ADMIN_PORT
+      }/categories/get-all-categories`,
+      {
+        method: "GET",
+      }
+    )
+      .then((response) =>
+        response.json().then((result) => {
+          const categoriesArray = result.result
+            .filter((categoryName) => categoryName.parent_category == 0)
+            .map((category) => category);
+          setCategories(categoriesArray);
+        })
+      )
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   const createProduct = async (event) => {
     event.preventDefault();
@@ -44,6 +77,7 @@ const ProductForm = ({
       productDescription,
       productPrice,
       productImages,
+      productCategory,
     };
     try {
       const response = await fetch(
@@ -86,6 +120,7 @@ const ProductForm = ({
       console.log(error);
     }
     setProductName("");
+    setProductCategory("");
     setProductDescription("");
     setProductPrice("");
     setProductImages([]);
@@ -93,7 +128,12 @@ const ProductForm = ({
 
   const updateProduct = async (event) => {
     event.preventDefault();
-    const productData = { productName, productDescription, productPrice };
+    const productData = {
+      productName,
+      productDescription,
+      productPrice,
+      productCategory,
+    };
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
@@ -263,6 +303,25 @@ const ProductForm = ({
         value={productName}
         onChange={(event) => setProductName(event.target.value)}
       />
+      <label>Category name</label>
+      <select
+        className={"input w-fit"}
+        style={{
+          marginLeft: "10px",
+          width: "fit-content",
+          padding: "5px 35px 5px 10px",
+          marginTop: "10px",
+        }}
+        value={productCategory}
+        onChange={(event) => setProductCategory(event.target.value)}
+      >
+        <option value="0">Uncategorized</option>
+        {categories.map((category) => (
+          <option value={category.id} key={category.id}>
+            {category.category_name}
+          </option>
+        ))}
+      </select>
 
       <ProductImagesSection
         images={productImages ? productImages : []}
@@ -316,4 +375,5 @@ ProductForm.propTypes = {
   existingPrice: PropTypes.string,
   id: PropTypes.string,
   existingImages: PropTypes.array,
+  existingCategory: PropTypes.string,
 };

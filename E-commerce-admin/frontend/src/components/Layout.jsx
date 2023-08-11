@@ -43,7 +43,7 @@ const Layout = () => {
       <Nav />
       <div
         className={
-          "p-4 dark:text-white text-[#1f1f1f] dark:bg-[#1f1f1f] bg-white transition-all duration-200 col-start-2 w-[100%]"
+          "p-4 dark:text-white text-[#1f1f1f] dark:bg-[#1f1f1f] bg-white transition-all duration-200 col-start-2 w-[100%] overflow-y-auto"
         }
       >
         <div>

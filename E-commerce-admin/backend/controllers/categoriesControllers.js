@@ -1,14 +1,15 @@
 require("dotenv").config();
 const connection = require("../db.js");
 
-const insertNewCategoryQuery = "INSERT INTO categories (category_name,parent_category) VALUES (?,?)";
-const updateCategoryQuery = "UPDATE categories SET category_name = ? ,parent_category = ? WHERE id = ?";
-const deleteCategoryQuery = "DELETE FROM categories WHERE id = ?";
+const insertNewCategoryQuery = "INSERT INTO categories (category_name,parent_category,category_id) VALUES (?,?,?)";
+const updateCategoryQuery = "UPDATE categories SET category_name = ? ,parent_category = ? WHERE category_id = ?";
+const deleteCategoryQuery = "DELETE FROM categories WHERE category_id = ?";
 const getAllCategoriesQuery = "SELECT * FROM categories";
 
 const handelCreateNewCategory = (req, res) => {
     const { categoryName, parentCategory } = req.body;
-    const values = [categoryName, parentCategory];
+    const { id } = req.params;
+    const values = [categoryName, parentCategory, id];
     connection.execute(insertNewCategoryQuery, values, (error, result) => {
         if (error) {
             console.log(error);

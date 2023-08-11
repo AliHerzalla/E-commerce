@@ -4,6 +4,7 @@ import ProductForm from "../components/ProductForm";
 
 const EditProduct = () => {
   const [existingName, setExistingName] = useState("");
+  const [existingCategory, setExistingCategory] = useState("");
   const [existingDescription, setExistingDescription] = useState("");
   const [existingPrice, setExistingPrice] = useState("");
   const [existingImages, setExistingImages] = useState([]);
@@ -12,6 +13,7 @@ const EditProduct = () => {
 
   const productInformation = {
     existingName,
+    existingCategory,
     existingDescription,
     existingPrice,
     id,
@@ -34,6 +36,7 @@ const EditProduct = () => {
         .then((response) => {
           response.json().then((result) => {
             setExistingName(result.product.product_name);
+            setExistingCategory(result.product.product_category);
             setExistingDescription(result.product.product_description);
             setExistingPrice(result.product.product_price);
           });

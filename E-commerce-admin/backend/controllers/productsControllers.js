@@ -2,9 +2,9 @@ const connection = require("../db.js");
 require("dotenv").config();
 const { Storage } = require("@google-cloud/storage");
 
-const insertNewProductQuery = "INSERT INTO products (id,product_name,product_description,product_price) VALUES (?,?,?,?)";
+const insertNewProductQuery = "INSERT INTO products (id,product_name,product_description,product_price,product_category) VALUES (?,?,?,?,?)";
 const searchProductsQuery = "SELECT * FROM products";
-const updateProductQuery = "UPDATE products SET product_name = ?, product_description = ?, product_price = ? WHERE id = ?";
+const updateProductQuery = "UPDATE products SET product_name = ?, product_description = ?, product_price = ?, product_category = ? WHERE id = ?";
 const searchSpecificProductQuery = "SELECT * FROM products WHERE id = ?";
 const deleteProductQuery = "DELETE FROM products WHERE id = ?";
 const insertNewProductImagesQuery = "INSERT INTO products_images (image,product_id) VALUES (?,?)";
@@ -15,8 +15,8 @@ const deleteProductImagesQuery = "DELETE FROM products_images WHERE product_id =
 
 const handelCreateNewProduct = (req, res) => {
     const { id } = req.params;
-    const { productName, productDescription, productPrice, productImages } = req.body;
-    const values = [id, productName, productDescription, productPrice];
+    const { productName, productDescription, productPrice, productImages, productCategory } = req.body;
+    const values = [id, productName, productDescription, productPrice, productCategory];
     connection.promise().execute(insertNewProductQuery, values, async (error, result) => {
         if (error) {
             res.status(400).json({
@@ -83,8 +83,8 @@ const handelGetProducts = (req, res) => {
 
 const handelEditProduct = (req, res) => {
     const { id } = req.params;
-    const { productName, productDescription, productPrice } = req.body;
-    const values = [productName, productDescription, productPrice, id];
+    const { productName, productDescription, productPrice, productCategory } = req.body;
+    const values = [productName, productDescription, productPrice, productCategory, id];
 
     connection.execute(updateProductQuery, values, (error, result) => {
         if (error) {

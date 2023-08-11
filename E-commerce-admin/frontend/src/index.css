@@ -41,7 +41,7 @@
 }
 
 .basic {
-  @apply w-full shadow-lg rounded-md;
+  @apply w-full shadow-lg rounded-md h-fit;
 }
 
 .basic thead tr th,

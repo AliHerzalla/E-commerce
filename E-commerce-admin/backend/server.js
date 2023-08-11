@@ -9,6 +9,7 @@ const passportConfig = require("./config/passport.js");
 const authRoute = require("./routes/auth.js");
 const productsRoute = require("./routes/products.js");
 const categoriesRouter = require("./routes/categories.js");
+const propertiesRouter = require("./routes/properties.js");
 const connection = require("./db.js");
 
 // Constants
@@ -38,6 +39,7 @@ app.use(express.json());
 app.use("/auth", authRoute);
 app.use("/products", productsRoute);
 app.use("/categories", categoriesRouter);
+app.use("/properties", propertiesRouter);
 
 // DataBase Connection
 connection.connect((error) => {
