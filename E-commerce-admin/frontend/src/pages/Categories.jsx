@@ -58,6 +58,29 @@ const Categories = () => {
 
           if (response.ok) {
             const result = await response.json();
+            if (properties.length > 0) {
+              //TODO: fetch to update properties pros => GET => DELETE => POST again  to DB
+              const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+                  import.meta.env.VITE_BACKEND_ADMIN_PORT
+                }/categories/update-category-property/${
+                  editedCategory.category_id
+                }`,
+                {
+                  method: "PUT",
+                  credentials: "include",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    properties: properties,
+                  }),
+                }
+              );
+              if (response.ok) {
+                await response.json();
+              }
+            }
             setIsProductsUpdated({
               status: true,
               message: result.message,
@@ -65,6 +88,7 @@ const Categories = () => {
             getAllCategories();
             setCategoryName("");
             setEditedCategory(null);
+            setProperties([]);
           }
         } else {
           const response = await fetch(
@@ -81,8 +105,7 @@ const Categories = () => {
             }
           );
           if (response.ok) {
-            // save new categories within uuid to make it better
-            response.json().then((result) => {
+            response.json().then(async (result) => {
               setIsProductsUpdated({
                 status: true,
                 message: result.message,
@@ -91,12 +114,8 @@ const Categories = () => {
               getAllCategories();
 
               if (properties.length > 0) {
-                // const propertiesArray = properties.map(
-                //   (propertyName) => propertyName.name
-                // );
                 setProperties([]);
-
-                fetch(
+                const response = await fetch(
                   `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
                     import.meta.env.VITE_BACKEND_ADMIN_PORT
                   }/properties/new-properties-name`,
@@ -111,19 +130,15 @@ const Categories = () => {
                       categoryId: categoryId,
                     }),
                   }
-                ).then((response) => {
-                  if (response.ok) {
-                    response.json().then((result) => {
-                      console.log(result);
-                    });
-                  }
-                });
+                );
+                if (response.ok) {
+                  await response.json();
+                }
               }
-
-              // console.log(testArray);
             });
           }
         }
+        setProperties([]);
       } catch (error) {
         console.log(error);
       }
@@ -185,7 +200,19 @@ const Categories = () => {
     [setIsProductsUpdated]
   );
 
-  const editCategory = (category_id, category_name, parent_category) => {
+  const editCategory = async (category_id, category_name, parent_category) => {
+    const response = await fetch(
+      `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+        import.meta.env.VITE_BACKEND_ADMIN_PORT
+      }/properties/get-specific-properties/${category_id}`,
+      {
+        method: "GET",
+      }
+    );
+    if (response.ok) {
+      const result = await response.json();
+      setProperties(result.result);
+    }
     setEditedCategory({ category_id, category_name, parent_category });
     setCategoryName(category_name);
     setParentCategory(parent_category);
@@ -230,7 +257,26 @@ const Categories = () => {
     setEditedCategory(null);
     setCategoryName("");
     setParentCategory(0);
+    setProperties([]);
   };
+
+  // const handelEditExistingPropertiesSubmit = async (category_id) => {
+  //   const response = await fetch(
+  //     `/properties/edit-exiting-properties/${category_id}`,
+  //     {
+  //       method: "PUT",
+  //       credentials: "include",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({}),
+  //     }
+  //   );
+  //   if (response.ok) {
+  //     const result = await response.json();
+  //     console.log(result);
+  //   }
+  // };
 
   useEffect(() => {
     getAllCategories();
@@ -292,13 +338,13 @@ const Categories = () => {
             Add new property
           </button>
           {properties.length > 0 &&
-            properties.map((property, index) => {
+            properties?.map((property, index) => {
               return (
                 <div className="flex gap-2 mb-2" key={index}>
                   <input
                     type="text"
                     placeholder={"Property name (example color)"}
-                    value={property.name}
+                    value={property.name || property.property_name || ""}
                     className={"rounded-lg w-full text-black"}
                     onChange={(event) =>
                       handelPropertyNameChange(
@@ -313,13 +359,13 @@ const Categories = () => {
                     placeholder={"Property values , Comma separated"}
                     value={property.values}
                     className={"rounded-lg w-full text-black"}
-                    onChange={(event) =>
+                    onChange={(event) => {
                       handelPropertyValuesChange(
                         index,
                         event.target.value,
                         property
-                      )
-                    }
+                      );
+                    }}
                   />
                   <button
                     type={"button"}
