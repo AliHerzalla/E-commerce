@@ -1,13 +1,13 @@
 const router = require("express").Router();
 const passport = require("passport");
 require("dotenv").config();
-const { handelLoginSuccess, handelLogin } = require("../controllers/authControllers.js");
+const { handelLoginSuccess, handelLogout } = require("../controllers/authControllers.js");
 
 // auth/login/success
 router.get("/login/success", handelLoginSuccess);
 
 // auth/logout
-router.get('/logout', handelLogin);
+router.get('/logout', handelLogout);
 
 // auth/google
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

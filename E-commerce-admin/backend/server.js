@@ -10,7 +10,8 @@ const authRoute = require("./routes/auth.js");
 const productsRoute = require("./routes/products.js");
 const categoriesRouter = require("./routes/categories.js");
 const propertiesRouter = require("./routes/properties.js");
-const connection = require("./db.js");
+// const connection = require("./db.js");
+const mongoose = require('mongoose');
 
 // Constants
 const corsConfig = {
@@ -42,12 +43,17 @@ app.use("/categories", categoriesRouter);
 app.use("/properties", propertiesRouter);
 
 // DataBase Connection
-connection.connect((error) => {
-    if (error) {
-        console.log(error);
-        return;
-    }
-    console.log('Connected to MySQL database!');
+
+// connection.connect((error) => {
+//     if (error) {
+//         console.log(error);
+//         return;
+//     }
+//     console.log('Connected to MySQL database!');
+// });
+
+mongoose.connect(`${process.env.MONGODB_URL_CONNECTION}/E-commerce`).then(() => {
+    console.log('Connected to Mongo database!');
 });
 
 // Server Connection

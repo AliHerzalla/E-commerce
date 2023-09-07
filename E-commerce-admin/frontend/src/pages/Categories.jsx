@@ -14,7 +14,7 @@ const Categories = () => {
   const [editedCategory, setEditedCategory] = useState(null);
   const [properties, setProperties] = useState([]);
 
-  const getAllCategories = async () => {
+  const getAllCategories = useCallback(async () => {
     setIsCategoriesLoading(true);
     try {
       const response = await fetch(
@@ -33,47 +33,51 @@ const Categories = () => {
     } catch (error) {
       console.log(error);
     }
-  };
+  }, []);
 
-  const saveCategory = useCallback(
+  const saveNewCategory = useCallback(
     async (event) => {
       const categoryId = uuidv4();
 
       event.preventDefault();
       try {
-        if (editedCategory != null) {
-          const response = await fetch(
-            `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
-              import.meta.env.VITE_BACKEND_ADMIN_PORT
-            }/categories/edit-category/${editedCategory.category_id}`,
-            {
-              method: "PUT",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ categoryName, parentCategory }),
-            }
-          );
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+            import.meta.env.VITE_BACKEND_ADMIN_PORT
+          }/categories/new-category/${categoryId}`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ categoryName, parentCategory }),
+          }
+        );
+        if (response.ok) {
+          response.json().then(async (result) => {
+            setIsProductsUpdated({
+              status: true,
+              message: result.message,
+            });
+            setCategoryName("");
+            getAllCategories();
 
-          if (response.ok) {
-            const result = await response.json();
             if (properties.length > 0) {
-              //TODO: fetch to update properties pros => GET => DELETE => POST again  to DB
+              setProperties([]);
               const response = await fetch(
                 `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
                   import.meta.env.VITE_BACKEND_ADMIN_PORT
-                }/categories/update-category-property/${
-                  editedCategory.category_id
-                }`,
+                }/properties/new-properties-name`,
                 {
-                  method: "PUT",
+                  method: "POST",
                   credentials: "include",
                   headers: {
                     "Content-Type": "application/json",
                   },
                   body: JSON.stringify({
                     properties: properties,
+                    categoryId: categoryId,
                   }),
                 }
               );
@@ -81,62 +85,7 @@ const Categories = () => {
                 await response.json();
               }
             }
-            setIsProductsUpdated({
-              status: true,
-              message: result.message,
-            });
-            getAllCategories();
-            setCategoryName("");
-            setEditedCategory(null);
-            setProperties([]);
-          }
-        } else {
-          const response = await fetch(
-            `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
-              import.meta.env.VITE_BACKEND_ADMIN_PORT
-            }/categories/new-category/${categoryId}`,
-            {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ categoryName, parentCategory }),
-            }
-          );
-          if (response.ok) {
-            response.json().then(async (result) => {
-              setIsProductsUpdated({
-                status: true,
-                message: result.message,
-              });
-              setCategoryName("");
-              getAllCategories();
-
-              if (properties.length > 0) {
-                setProperties([]);
-                const response = await fetch(
-                  `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
-                    import.meta.env.VITE_BACKEND_ADMIN_PORT
-                  }/properties/new-properties-name`,
-                  {
-                    method: "POST",
-                    credentials: "include",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      properties: properties,
-                      categoryId: categoryId,
-                    }),
-                  }
-                );
-                if (response.ok) {
-                  await response.json();
-                }
-              }
-            });
-          }
+          });
         }
         setProperties([]);
       } catch (error) {
@@ -144,11 +93,11 @@ const Categories = () => {
       }
     },
     [
-      editedCategory,
       categoryName,
       parentCategory,
       setIsProductsUpdated,
       properties,
+      getAllCategories,
     ]
   );
 
@@ -184,11 +133,22 @@ const Categories = () => {
             );
             const result = await response.json();
             if (response.ok) {
-              getAllCategories();
-              setIsProductsUpdated({
-                message: result.message,
-                status: true,
-              });
+              const response = await fetch(
+                `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+                  import.meta.env.VITE_BACKEND_ADMIN_PORT
+                }/properties/delete-properties/${category_id}`,
+                {
+                  method: "DELETE",
+                }
+              );
+              if (response.ok) {
+                await response.json();
+                getAllCategories();
+                setIsProductsUpdated({
+                  message: result.message,
+                  status: true,
+                });
+              }
             } else {
               swalWithBootstrapButtons.fire("Cancelled", "", "error");
             }
@@ -197,26 +157,33 @@ const Categories = () => {
           }
         });
     },
-    [setIsProductsUpdated]
+    [setIsProductsUpdated, getAllCategories]
   );
 
-  const editCategory = async (category_id, category_name, parent_category) => {
-    const response = await fetch(
-      `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
-        import.meta.env.VITE_BACKEND_ADMIN_PORT
-      }/properties/get-specific-properties/${category_id}`,
-      {
-        method: "GET",
+  const editCategory = useCallback(
+    async (category_id, category_name, parent_category) => {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+            import.meta.env.VITE_BACKEND_ADMIN_PORT
+          }/properties/get-specific-properties/${category_id}`,
+          {
+            method: "GET",
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setProperties(result.result || []);
+        }
+        setEditedCategory({ category_id, category_name, parent_category });
+        setCategoryName(category_name);
+        setParentCategory(parent_category);
+      } catch (error) {
+        console.log(error);
       }
-    );
-    if (response.ok) {
-      const result = await response.json();
-      setProperties(result.result);
-    }
-    setEditedCategory({ category_id, category_name, parent_category });
-    setCategoryName(category_name);
-    setParentCategory(parent_category);
-  };
+    },
+    []
+  );
 
   const handelAddNewProperty = () => {
     setProperties((prev) => {
@@ -260,28 +227,86 @@ const Categories = () => {
     setProperties([]);
   };
 
-  // const handelEditExistingPropertiesSubmit = async (category_id) => {
-  //   const response = await fetch(
-  //     `/properties/edit-exiting-properties/${category_id}`,
-  //     {
-  //       method: "PUT",
-  //       credentials: "include",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({}),
-  //     }
-  //   );
-  //   if (response.ok) {
-  //     const result = await response.json();
-  //     console.log(result);
-  //   }
-  // };
+  const saveEditedCategory = useCallback(
+    async (event) => {
+      event.preventDefault();
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+            import.meta.env.VITE_BACKEND_ADMIN_PORT
+          }/categories/edit-category/${editedCategory.category_id}`,
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ categoryName, parentCategory }),
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          if (properties.length > 0) {
+            const response = await fetch(
+              `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+                import.meta.env.VITE_BACKEND_ADMIN_PORT
+              }/categories/update-category-property/${
+                editedCategory.category_id
+              }`,
+              {
+                method: "PUT",
+                credentials: "include",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  properties: properties,
+                }),
+              }
+            );
+            if (response.ok) {
+              await response.json();
+            }
+          } else {
+            const response = await fetch(
+              `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+                import.meta.env.VITE_BACKEND_ADMIN_PORT
+              }/properties/delete-properties/${editedCategory.category_id}`,
+              {
+                method: "DELETE",
+              }
+            );
+            if (response.ok) {
+              await response.json();
+            }
+          }
+          setIsProductsUpdated({
+            status: true,
+            message: result.message,
+          });
+          getAllCategories();
+          setCategoryName("");
+          setEditedCategory(null);
+          setProperties([]);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    [
+      editedCategory,
+      categoryName,
+      parentCategory,
+      properties,
+      setIsProductsUpdated,
+      getAllCategories,
+    ]
+  );
 
   useEffect(() => {
     getAllCategories();
     setTimeout(() => setIsCategoriesLoading(false), 2000);
-  }, []);
+  }, [getAllCategories]);
 
   return (
     <div className={"h-full relative"}>
@@ -291,7 +316,12 @@ const Categories = () => {
           ? `Edit Category ${categoryName}`
           : "Create new category"}
       </label>
-      <form method="POST" onSubmit={saveCategory}>
+      <form
+        method="POST"
+        onSubmit={editedCategory ? saveEditedCategory : saveNewCategory}
+        name={"categoriesForm"}
+        id={"categoriesForm"}
+      >
         <div className={"flex gap-2 flex-wrap md:flex-nowrap mt-2"}>
           <input
             type="text"

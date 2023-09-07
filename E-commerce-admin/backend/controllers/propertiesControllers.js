@@ -1,102 +1,58 @@
-const connection = require("../db.js");
-const { v4: uuidv4 } = require("uuid");
+const { ObjectId } = require('mongodb');
+const PropertiesModel = require("../models/properties.js");
 
-const insertPropertyNameQuery = "INSERT INTO properties_name (category_id,property_name,property_id) VALUES (?,?,?)";
-const deletePropertyNameQuery = "DELETE FROM properties_name WHERE property_id = ?";
-const insertPropertyValueQuery = "INSERT INTO properties_values (property_name_id,property_value,property_value_id) VALUES (?,?,?)";
-const getSpecificPropertiesQuery = "SELECT property_name,property_id FROM properties_name WHERE category_id = ?";
-const selectPropertiesValuesQuery = "SELECT property_value FROM properties_values WHERE property_name_id = ?";
-
-
-const handelAddNewPropertiesNames = (req, res) => {
+const handelAddNewProperties = async (req, res) => {
     const { properties, categoryId } = req.body;
-
-    const propertiesNames = properties.map(propName => propName.name);
-    const propertiesValues = properties.map(propValue => propValue.values);
-
-    const promises = propertiesNames.map((name, index) => {
-        return new Promise((resolve, reject) => {
-            const propertyNameId = uuidv4();
-            const values = [categoryId, name, propertyNameId];
-            connection.execute(insertPropertyNameQuery, values, (error, result) => {
-                if (error) {
-                    console.log(error);
-                    res.status(400).json({ message: "Something went wrong" });
-                    reject(error);
-                } else {
-                    new Promise((resolve, reject) => {
-                        const singlePropertyValues = propertiesValues[index].split(",");
-                        singlePropertyValues.map(value => {
-                            const singlePropertyValueId = uuidv4();
-                            const values = [propertyNameId, value, singlePropertyValueId];
-                            connection.execute(insertPropertyValueQuery, values, (error, result) => {
-                                if (error) {
-                                    console.log(error);
-                                    res.status(400).json({ message: "Something went wrong" });
-                                    reject(error);
-                                } else {
-                                    resolve(result);
-                                }
-                            });
-                        });
-                    });
-                    resolve(result);
-                }
-            });
+    const newProperties = properties.map(prop => {
+        return { name: prop.name, values: prop.values.split(',') };
+    });
+    try {
+        const PropertiesDoc = await PropertiesModel.insertMany({
+            category_id: categoryId,
+            property_id: new ObjectId(),
+            properties: newProperties
         });
-    });
-
-    return Promise.all(promises).then(() => {
-        return res.status(200).json({ message: "Properties saved" });
-    }).catch((error) => {
-        console.error(error);
-        return res.status(500).json({ message: "Error saving properties" });
-    });
-};
-
-const handelEditExistingProperties = (req, res) => {
-
-};
-
-const handelGetSpecificProperties = (req, res) => {
-    const { id } = req.params;
-    const values = [id];
-    connection.execute(getSpecificPropertiesQuery, values, (error, result) => {
-        if (error) {
-            console.log(error);
-            return res.status(400).json({ message: "Error getting properties" });
+        if (PropertiesDoc) {
+            res.status(200).json({ message: "Properties saved" });
         }
-        const propertiesPromises = result.map((property, index) => {
-            return new Promise((resolve, reject) => {
-                const propValues = [property.property_id];
-                connection.execute(selectPropertiesValuesQuery, propValues, (error, resultValuesArray) => {
-                    if (error) {
-                        console.log(error);
-                        reject(error);
-                    } else {
-                        let concatString = "";
-                        resultValuesArray.map((val, index) => {
-                            concatString += val.property_value + (index == resultValuesArray.length - 1 ? "" : ",");
-                        });
-                        resolve({ name: property.property_name, values: concatString });
-                    }
-                });
-            });
-        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error saving properties" });
+    }
+};
 
-        Promise.all(propertiesPromises)
-            .then((properties) => {
-                return res.status(200).json({ message: "Success getting properties", result: properties });
-            })
-            .catch((error) => {
-                console.error(error);
-                return res.status(404).json({ message: "Couldn't find properties" });
-            });
-    });
+const handelGetSpecificProperties = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const PropertiesDoc = await PropertiesModel.find({ category_id: id });
+        if (PropertiesDoc.length > 0) {
+            res.status(200).json({ message: "Success getting properties", result: PropertiesDoc[0].properties });
+        } else {
+            res.status(200).json({ message: "Success getting properties", result: [] });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: "Couldn't find properties" });
+    }
+};
+
+const handelDeleteProperties = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const PropertiesDoc = await PropertiesModel.findOneAndRemove({ category_id: id });
+        if (PropertiesDoc) {
+            res.status(200).json({ message: "Properties deleted successfully" });
+        } else {
+            res.status(200).json({ message: "There is no properties" });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({ message: "Couldn't delete properties" });
+    }
 };
 
 module.exports = {
-    handelAddNewPropertiesNames,
-    handelEditExistingProperties,
+    handelAddNewProperties,
     handelGetSpecificProperties,
+    handelDeleteProperties,
 };

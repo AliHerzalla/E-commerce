@@ -16,11 +16,11 @@ const handelLoginSuccess = (req, res) => {
     }
 };
 
-const handelLogin = (req, res) => {
+const handelLogout = (req, res) => {
     req.logout(function () { });
     res.status(200).json({
         message: "Logout successfully completed"
     });
 };
 
-module.exports = { handelLoginSuccess, handelLogin };
+module.exports = { handelLoginSuccess, handelLogout };

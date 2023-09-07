@@ -1,15 +1,14 @@
 const router = require("express").Router();
 const {
-    handelAddNewPropertiesNames,
-    handelEditExistingProperties,
+    handelAddNewProperties,
     handelGetSpecificProperties,
+    handelDeleteProperties,
 } = require("../controllers/propertiesControllers.js");
 
-router.post("/new-properties-name", handelAddNewPropertiesNames);
-
-router.put("/edit-exiting-properties/:id", handelEditExistingProperties);
+router.post("/new-properties-name", handelAddNewProperties);
 
 router.get("/get-specific-properties/:id", handelGetSpecificProperties);
 
+router.delete("/delete-properties/:id", handelDeleteProperties);
 
 module.exports = router;

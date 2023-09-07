@@ -4,7 +4,8 @@ const {
     handelGetAllCategories,
     handelEditCategory,
     handelDeleteCategory,
-    handelUpdateProperties
+    handelEditProperties,
+    handelGetSelectedCategory
 } = require("../controllers/categoriesControllers.js");
 
 router.post("/new-category/:id", handelCreateNewCategory);
@@ -15,6 +16,8 @@ router.delete("/delete-category/:id", handelDeleteCategory);
 
 router.get("/get-all-categories", handelGetAllCategories);
 
-router.put("/update-category-property/:id", handelUpdateProperties);
+router.put("/update-category-property/:id", handelEditProperties);
+
+router.post("/get-selected-category-property", handelGetSelectedCategory);
 
 module.exports = router;

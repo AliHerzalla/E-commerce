@@ -1,150 +1,158 @@
-const connection = require("../db.js");
 require("dotenv").config();
 const { Storage } = require("@google-cloud/storage");
+const ProductsModel = require("../models/products.js");
+const ProductImagesModel = require("../models/productsImages.js");
 
-const insertNewProductQuery = "INSERT INTO products (id,product_name,product_description,product_price,product_category) VALUES (?,?,?,?,?)";
-const searchProductsQuery = "SELECT * FROM products";
-const updateProductQuery = "UPDATE products SET product_name = ?, product_description = ?, product_price = ?, product_category = ? WHERE id = ?";
-const searchSpecificProductQuery = "SELECT * FROM products WHERE id = ?";
-const deleteProductQuery = "DELETE FROM products WHERE id = ?";
-const insertNewProductImagesQuery = "INSERT INTO products_images (image,product_id) VALUES (?,?)";
-const searchProductsImagesQuery = "SELECT image FROM products_images WHERE product_id = ?";
-const insertEditProductImagesQuery = "INSERT INTO products_images (image,product_id) VALUES (?, ?)";
-const deleteProductImagesQuery = "DELETE FROM products_images WHERE product_id = ?";
-
-
-const handelCreateNewProduct = (req, res) => {
+const handelCreateNewProduct = async (req, res) => {
     const { id } = req.params;
-    const { productName, productDescription, productPrice, productImages, productCategory } = req.body;
-    const values = [id, productName, productDescription, productPrice, productCategory];
-    connection.promise().execute(insertNewProductQuery, values, async (error, result) => {
-        if (error) {
-            res.status(400).json({
-                message: "Something went wrong, Try again later"
-            });
-        }
-    }).then(() => {
-        if (productImages) {
-            productImages.map((image) => {
-                const values = [image, id];
-                connection.execute(insertNewProductImagesQuery, values, (error, result) => {
-                    if (error) {
-                        res.status(400).json({
-                            message: "Something went wrong, Try again later"
-                        });
-                    }
+    const { productName, productDescription, productPrice, productImages, productCategory, productProperties } = req.body;
+    try {
+        const ProductDoc = await ProductsModel.create({
+            id: id,
+            product_name: productName,
+            product_description: productDescription,
+            product_price: productPrice,
+            product_category: productCategory,
+            product_properties: productProperties,
+        }).then(() => {
+            if (productImages) {
+                productImages.map(async (image) => {
+                    await ProductImagesModel.create({
+                        product_id: id,
+                        image: image
+                    });
                 });
-            });
-            return res.status(200).json({
-                message: "Product inserted successfully",
-                product: productImages
-            });
-        } else {
-            return res.status(200).json({
-                message: "Product inserted successfully",
-                product: result[0]
-            });
-        }
-    });
-};
-
-const handelGetExistingProductImages = (req, res) => {
-    const { id } = req.params;
-
-    const values = [id];
-    connection.execute(searchProductsImagesQuery, values, (error, result) => {
-        if (error) {
-            console.log(error);
-            res.status(404).json({
-                message: 'Product images not found'
-            });
-        }
-        res.status(200).json({
-            message: 'Product images found',
-            images: result
+                return res.status(200).json({
+                    message: "Product inserted successfully",
+                    product: ProductDoc,
+                    productImages: productImages
+                });
+            } else {
+                return res.status(200).json({
+                    message: "Product inserted successfully",
+                    product: ProductDoc
+                });
+            }
         });
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            message: "Something went wrong, Try again later"
+        });
+    }
 };
 
-const handelGetProducts = (req, res) => {
-    connection.execute(searchProductsQuery, (error, result) => {
-        if (error) {
-            res.status(400).json({
-                message: "Cannot get products"
+const handelGetExistingProductImages = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const ProductImagesDoc = await ProductImagesModel.find({ product_id: id });
+        if (ProductImagesDoc) {
+            res.status(200).json({
+                message: 'Product images found',
+                images: ProductImagesDoc
             });
-        } else {
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(404).json({
+            message: 'Product images not found'
+        });
+    }
+};
+
+const handelGetProducts = async (req, res) => {
+
+    try {
+        const ProductsDoc = await ProductsModel.find({});
+        if (ProductsDoc) {
             res.status(200).json({
                 message: "Get products successfully",
-                products: result
+                products: ProductsDoc
             });
         }
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            message: "Cannot get products"
+        });
+    }
 };
 
-const handelEditProduct = (req, res) => {
+const handelEditProduct = async (req, res) => {
     const { id } = req.params;
-    const { productName, productDescription, productPrice, productCategory } = req.body;
-    const values = [productName, productDescription, productPrice, productCategory, id];
+    const { productName, productDescription, productPrice, productCategory, productProperties } = req.body;
 
-    connection.execute(updateProductQuery, values, (error, result) => {
-        if (error) {
-            res.status(400).json({
-                message: "Error when updating product"
-            });
-        } else {
+    try {
+        const ProductsDoc = await ProductsModel.findOneAndUpdate({ id: id }, {
+            product_name: productName,
+            product_description: productDescription,
+            product_price: productPrice,
+            product_category: productCategory,
+            product_properties: productProperties
+        });
+        if (ProductsDoc) {
             res.status(200).json({
-                message: "updated product successfully",
-                updatedProductInfo: result[0]
+                message: "Updated product successfully",
+                updatedProductInfo: ProductsDoc
             });
         }
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            message: "Error when updating product"
+        });
+    }
 };
 
-const handelGetProductToEdit = (req, res) => {
+const handelGetProductToEdit = async (req, res) => {
     const { id } = req.params;
-    const values = [id];
-    connection.execute(searchSpecificProductQuery, values, (error, result) => {
-        if (error) {
-            res.status(400).json({
-                message: "Cannot find product to edit"
-            });
-        } else {
+
+    try {
+        const ProductDoc = await ProductsModel.findOne({ id: id });
+        if (ProductDoc) {
             res.status(200).json({
                 message: "Product found to edit",
-                product: result[0]
+                product: ProductDoc
             });
         }
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            message: "Cannot find product to edit"
+        });
+    }
 };
 
-const handelGetSingleProduct = (req, res) => {
+const handelGetSingleProduct = async (req, res) => {
     const { id } = req.params;
-    const values = [id];
-    connection.execute(searchSpecificProductQuery, values, (error, result) => {
-        if (error) {
-            res.status(400).json({
-                message: "Cannot find product"
-            });
-        } else {
+    try {
+        const ProductDoc = await ProductsModel.findOne({ id: id });
+        if (ProductDoc) {
             res.status(200).json({
                 message: "Product found",
-                product: result[0]
+                product: ProductDoc
             });
         }
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({
+            message: "Cannot find product"
+        });
+    }
 };
 
-const handelDeleteProduct = (req, res) => {
+const handelDeleteProduct = async (req, res) => {
     const { id } = req.params;
-    const values = [id];
 
-    connection.execute(deleteProductQuery, values, (error, result) => {
-        if (error) {
-            res.status(400).json({ message: "Something went wrong, Try again later" });
-        } else {
+    try {
+        const ProductDoc = await ProductsModel.findOneAndRemove({ id: id });
+        if (ProductDoc) {
             res.status(200).json({ message: "Product deleted successfully" });
         }
-    });
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({ message: "Something went wrong, Try again later" });
+    }
 };
 
 const storage = new Storage({
@@ -186,33 +194,32 @@ const handelAddProductImagesToBucket = async (req, res) => {
     }
 };
 
-const handelAddNewProductImages = (req, res) => {
+const handelAddNewProductImages = async (req, res) => {
     const { id } = req.params;
     const { productImages } = req.body;
 
-    const values = [id];
-    connection.promise().execute(deleteProductImagesQuery, values, (error, result) => {
-        if (error) {
-            res.status(404).json({
-                message: "Something went wrong, please try again later"
-            });
-        }
-    }).then(() => {
-        productImages.map((image) => {
-            const values = [image, id];
-            connection.execute(insertEditProductImagesQuery, values, (error, result) => {
-                if (error) {
-                    res.status(400).json({
-                        message: "Something went wrong, Try again later"
-                    });
-                }
-            });
-        });
+    try {
+        // Delete existing product images
+        await ProductImagesModel.deleteMany({ product_id: id });
+
+        // Insert new product images
+        const insertedImages = await ProductImagesModel.insertMany(
+            productImages.map((image) => ({
+                product_id: id,
+                image: image,
+            }))
+        );
+
         return res.status(200).json({
-            message: "Product inserted successfully",
-            product: productImages
+            message: "Product images inserted successfully",
+            productImages: insertedImages,
         });
-    });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Something went wrong, please try again later",
+        });
+    }
 };
 
 module.exports = {

@@ -25,6 +25,8 @@ const ProductForm = ({
   const [productImages, setProductImages] = useState([]);
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [productProperties, setProductProperties] = useState({});
 
   const navigate = useNavigate();
   const { id: productId } = useParams();
@@ -59,9 +61,7 @@ const ProductForm = ({
     )
       .then((response) =>
         response.json().then((result) => {
-          const categoriesArray = result.result
-            .filter((categoryName) => categoryName.parent_category == 0)
-            .map((category) => category);
+          const categoriesArray = result.result.map((category) => category);
           setCategories(categoriesArray);
         })
       )
@@ -69,6 +69,42 @@ const ProductForm = ({
         console.log(error);
       });
   }, []);
+
+  useEffect(() => {
+    let propertiesToFill = [];
+    if (categories.length > 0 && productCategory) {
+      let selectedCategoryInfo = categories.find(
+        (category) => category?.category_name == productCategory
+      );
+      const parentId = selectedCategoryInfo?.parent_category;
+      const categoryId = selectedCategoryInfo?.category_id;
+
+      const getProperties = async () => {
+        const response = await fetch(
+          `${import.meta.env.VITE_BACKEND_ADMIN_URL}${
+            import.meta.env.VITE_BACKEND_ADMIN_PORT
+          }/categories/get-selected-category-property`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              parentId,
+              categoryId,
+            }),
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          propertiesToFill = result.result;
+          setProperties(propertiesToFill);
+        }
+      };
+      getProperties();
+    }
+  }, [categories, productCategory]);
 
   const createProduct = async (event) => {
     event.preventDefault();
@@ -78,6 +114,7 @@ const ProductForm = ({
       productPrice,
       productImages,
       productCategory,
+      productProperties,
     };
     try {
       const response = await fetch(
@@ -277,6 +314,14 @@ const ProductForm = ({
     }
   };
 
+  const setProductProp = (name, value) => {
+    setProductProperties((prev) => {
+      const newProductProperties = { ...prev };
+      newProductProperties[name] = value;
+      return newProductProperties;
+    });
+  };
+
   return (
     <form
       onSubmit={(event) =>
@@ -313,15 +358,54 @@ const ProductForm = ({
           marginTop: "10px",
         }}
         value={productCategory}
-        onChange={(event) => setProductCategory(event.target.value)}
+        key={Math.random()}
+        onChange={(event) => {
+          setProductCategory(event.target.value);
+          setProperties([]);
+        }}
       >
         <option value="0">Uncategorized</option>
-        {categories.map((category) => (
-          <option value={category.id} key={category.id}>
-            {category.category_name}
-          </option>
-        ))}
+        {categories.map((childCategory) => {
+          return (
+            <option value={childCategory.id} key={childCategory.id}>
+              {childCategory.category_name}
+            </option>
+          );
+        })}
       </select>
+
+      {categories.length > 0 &&
+        properties.map((property, index) => {
+          return (
+            <div key={property + index} className={"flex items-center"}>
+              <div>property {property.name || ""}</div>
+              <select
+                // value={property?.name}
+                onChange={(event) => {
+                  setProductProp(property?.name, event.target.value);
+                }}
+                className={"input w-fit"}
+                style={{
+                  marginLeft: "10px",
+                  width: "fit-content",
+                  padding: "5px 35px 5px 10px",
+                  marginTop: "10px",
+                }}
+              >
+                <option value="none" disabled hidden selected>
+                  none
+                </option>
+                {property.values.map((val, index) => {
+                  return (
+                    <option value={val} key={val + index}>
+                      {val}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          );
+        })}
 
       <ProductImagesSection
         images={productImages ? productImages : []}
@@ -376,4 +460,5 @@ ProductForm.propTypes = {
   id: PropTypes.string,
   existingImages: PropTypes.array,
   existingCategory: PropTypes.string,
+  existingProperties: PropTypes.any,
 };

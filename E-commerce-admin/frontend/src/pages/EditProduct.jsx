@@ -65,8 +65,8 @@ const EditProduct = () => {
       if (response.ok) {
         response.json().then((result) => {
           setExistingImages(() => {
-            const arrayImages = result.images.map((value, index) => {
-              return result.images[index].image;
+            const arrayImages = result.images.map((value) => {
+              return value.image;
             });
             return arrayImages;
           });
